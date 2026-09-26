@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tinytriton"
+version = "0.1.0"
+description = "Build a compiler in Python: Step 1, source code to instructions"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Mingfei Guo" }]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.12"]
+
+[project.scripts]
+tinytriton = "tinytriton.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tinytriton"]
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+
+[tool.pytest.ini_options]
+testpaths = ["src/tinytriton/checks.py"]
