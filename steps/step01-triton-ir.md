@@ -257,7 +257,7 @@ notion of a recorded instruction; neither is a special Python keyword.
 ## 7. The exercise interface
 
 Clone the [companion repository](https://github.com/guoriyue/TinyTriton), which
-currently contains only Step 1. With Python 3.10 or newer, run:
+contains the first two lessons. With Python 3.10 or newer, run:
 
 ```bash
 git clone https://github.com/guoriyue/TinyTriton.git
@@ -365,3 +365,5 @@ After implementing the TODOs, run:
 ```bash
 tinytriton check step01
 ```
+
+Continue with [Step 2. Execute the instructions on the CPU](step02-interpreter.md).

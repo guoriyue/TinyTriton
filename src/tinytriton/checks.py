@@ -1,7 +1,8 @@
-"""Check Step 1's documented representation contract without executing a kernel."""
+"""Check the published representation and CPU execution contracts."""
 
 import ast
 
+import numpy as np
 import pytest
 
 from tinytriton import kernels
@@ -81,3 +82,51 @@ def test_step01_unknown_name_is_an_error(compiler):
     misspelled = kernels.vector_add.replace("* BLOCK", "* BLOKC")
     with pytest.raises(KeyError, match="BLOKC"):
         compiler.lower(compiler.parse(misspelled), block=4)
+
+
+@pytest.mark.parametrize("n, block", [(1, 4), (4, 4), (6, 4), (6, 8), (10, 4)])
+def test_step02_vector_add_and_untouched_tail(compiler, n, block):
+    program = compiler.lower(compiler.parse(kernels.vector_add), block=block)
+    x = np.arange(n, dtype=np.float32) * 3 + 100
+    y = np.arange(n, dtype=np.float32) * 2 - 7
+    out = np.full(n + block, -99, dtype=np.float32)
+    result = compiler.run(
+        program, {"x": x, "y": y, "out": out, "n": n}, (n + block - 1) // block
+    )
+    assert result is None
+    np.testing.assert_array_equal(out[:n], x + y)
+    np.testing.assert_array_equal(out[n:], -99)
+
+
+def test_step02_load_returns_fallback_without_reading_invalid_targets(compiler):
+    source = """def copy(x: ptr, out: ptr, n: int, BLOCK: tl.constexpr):
+    offsets = tl.program_id(0) * BLOCK + tl.arange(0, BLOCK)
+    values = tl.load(x + offsets, mask=offsets < n, other=7.0)
+    tl.store(out + offsets, values, mask=offsets < 8)
+"""
+    program = compiler.lower(compiler.parse(source), block=4)
+    x = np.array([100, 200, 300, 400, 500, 600], dtype=np.float32)
+    out = np.full(8, -99, dtype=np.float32)
+    compiler.run(program, {"x": x, "out": out, "n": 6}, grid=2)
+    np.testing.assert_array_equal(out, [100, 200, 300, 400, 500, 600, 7, 7])
+
+
+def test_step02_reuses_ir_with_fresh_invocation_arguments(compiler):
+    program = compiler.lower(compiler.parse(kernels.vector_add), block=4)
+    for n, start in [(6, 20), (4, 100)]:
+        x = np.arange(n, dtype=np.float32) + start
+        y = np.full(n, 10, dtype=np.float32)
+        out = np.full(8, -99, dtype=np.float32)
+        compiler.run(program, {"x": x, "y": y, "out": out, "n": n}, (n + 3) // 4)
+        np.testing.assert_array_equal(out[:n], x + y)
+        np.testing.assert_array_equal(out[n:], -99)
+
+
+def test_step02_inactive_program_does_not_write(compiler):
+    program = compiler.lower(compiler.parse(kernels.vector_add), block=4)
+    x = np.arange(6, dtype=np.float32)
+    y = np.full(6, 10, dtype=np.float32)
+    out = np.full(12, -99, dtype=np.float32)
+    compiler.run(program, {"x": x, "y": y, "out": out, "n": 6}, grid=3)
+    np.testing.assert_array_equal(out[:6], x + y)
+    np.testing.assert_array_equal(out[6:], -99)

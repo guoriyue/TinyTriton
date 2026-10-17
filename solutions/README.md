@@ -1,7 +1,12 @@
-# Step 1 reference implementation
+# Published reference implementations
 
-Attempt [the exercise](https://github.com/guoriyue/tiny-triton/blob/main/problems/step01.py) before reading [step01.py](https://github.com/guoriyue/tiny-triton/blob/main/solutions/step01.py).
-Compare dependencies, types, shapes, and compile-time choices; temporary names
-need not match. Run `tinytriton check step01 --solution` to check this version.
+Attempt each exercise before comparing its reference.
 
-Only Step 1 is published in this release.
+| Lesson | Reference | Check |
+|---|---|---|
+| [Step 1](../steps/step01-triton-ir.md) | [step01.py](step01.py) | `tinytriton check step01 --solution` |
+| [Step 2](../steps/step02-interpreter.md) | [step02.py](step02.py) | `tinytriton check step02 --solution` |
+
+The Step 2 reference imports the Step 1 reference from the same directory.
+Compare behavior and representation rather than temporary result names.
+The tutorial documents the scope of the masked load implementation.
